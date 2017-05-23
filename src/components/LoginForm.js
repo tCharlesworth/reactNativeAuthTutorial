@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Text } from 'react-native';
 import firebase from 'firebase';
 
-import { Button, Card, CardItem, TextField } from './common';
+import { Button, Card, CardItem, TextField, Spinner } from './common';
 
 class LoginForm extends Component {
     constructor(props) {
@@ -10,13 +10,14 @@ class LoginForm extends Component {
         this.state = {
             email: '',
             password: '',
-            error: ''
+            error: '',
+            loading: false
         };
     }
     onButtonPress() {
         const { email, password } = this.state;
 
-        this.setState({error: ''});
+        this.setState({error: '', loading: true});
 
         // Attempt Sign In
         firebase.auth().signInWithEmailAndPassword(email, password)
@@ -25,10 +26,21 @@ class LoginForm extends Component {
                 firebase.auth().createUserWithEmailAndPassword(email, password)
                     .catch(err => {
                         // Show Error
-                        this.setState({ error: 'Authentication Failed' });
+                        this.setState({ error: 'Authentication Failed', loading: false });
                         console.log(err);
                     });
             });
+    }
+    renderError() {
+        if (this.state.error.length > 1) {
+            return <Text style={styles.errorTextStyle}>{this.state.error}</Text> 
+        }
+    }
+    renderButton() {
+        if( this.state.loading ) {
+            return <Spinner size="small" />
+        }
+        return <Button onPress={this.onButtonPress.bind(this)} buttonTitle="Login" />
     }
     render() {
         return (
@@ -52,10 +64,10 @@ class LoginForm extends Component {
                         label="Password"/>
                 </CardItem>
 
-                { (this.state.error.length > 1) ? <Text style={styles.errorTextStyle}>{this.state.error}</Text> : null }
+                {this.renderError()}
 
                 <CardItem>
-                    <Button onPress={this.onButtonPress.bind(this)} buttonTitle="Login" />
+                    {this.renderButton()}
                 </CardItem>
             </Card>
         );
