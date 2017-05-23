@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View } from 'react-native';
+import { Text } from 'react-native';
 import firebase from 'firebase';
 
 import { Button, Card, CardItem, TextField } from './common';
@@ -8,15 +8,27 @@ class LoginForm extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            emailText: '',
-            passwordText: ''
+            email: '',
+            password: '',
+            error: ''
         };
     }
     onButtonPress() {
-        const credentials = { 
-            email: this.state.emailText, 
-            password: this.state.passwordText 
-        };
+        const { email, password } = this.state;
+
+        this.setState({error: ''});
+
+        // Attempt Sign In
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .catch(() => {
+                // Create a new account
+                firebase.auth().createUserWithEmailAndPassword(email, password)
+                    .catch(err => {
+                        // Show Error
+                        this.setState({ error: 'Authentication Failed' });
+                        console.log(err);
+                    });
+            });
     }
     render() {
         return (
@@ -25,8 +37,8 @@ class LoginForm extends Component {
                     <TextField
                         placeholder="user@gmail.com"
                         autoCorrect={false}
-                        value={this.state.emailText}
-                        onChangeText={ emailText => this.setState({ emailText }) }
+                        value={this.state.email}
+                        onChangeText={ email => this.setState({ email }) }
                         label="Email"/>
                 </CardItem>
 
@@ -35,10 +47,12 @@ class LoginForm extends Component {
                         secureTextEntry
                         placeholder="********"
                         autoCorrect={false}
-                        value={this.state.passwordText}
-                        onChangeText={ passwordText => this.setState({ passwordText }) }
+                        value={this.state.password}
+                        onChangeText={ password => this.setState({ password }) }
                         label="Password"/>
                 </CardItem>
+
+                { (this.state.error.length > 1) ? <Text style={styles.errorTextStyle}>{this.state.error}</Text> : null }
 
                 <CardItem>
                     <Button onPress={this.onButtonPress.bind(this)} buttonTitle="Login" />
@@ -47,5 +61,13 @@ class LoginForm extends Component {
         );
     }
 }
+
+const styles = {
+    errorTextStyle: {
+        fontSize: 20,
+        alignSelf: 'center',
+        color: 'red'
+    }
+};
 
 export default LoginForm;
